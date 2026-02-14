@@ -1,5 +1,7 @@
 const express = require("express");
 const session = require("express-session");
+const router = require("./routers");
+const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
 const port = 8080;
@@ -16,6 +18,16 @@ app.use(
 	}),
 );
 
-app.listen(port, () => {
-	console.log(`Service API listening on http://localhost:${port}`);
-});
+// Routes
+app.use("/api", router);
+
+// Error Handler
+app.use(errorHandler);
+
+if (require.main === module) {
+	app.listen(port, () => {
+		console.log(`Service API listening on http://localhost:${port}`);
+	});
+}
+
+module.exports = app;
