@@ -9,7 +9,7 @@ class ProjectController {
 					{
 						model: User,
 						as: "owner",
-						attributes: ["id", "username", "email"],
+						attributes: ["username", "email"],
 					},
 				],
 				order: [["createdAt", "DESC"]],
@@ -35,7 +35,7 @@ class ProjectController {
 					{
 						model: User,
 						as: "owner",
-						attributes: ["id", "username", "email"],
+						attributes: ["username", "email"],
 					},
 					{
 						model: Task,
@@ -44,7 +44,7 @@ class ProjectController {
 							{
 								model: User,
 								as: "assignee",
-								attributes: ["id", "username", "email"],
+								attributes: ["username", "email"],
 							},
 						],
 					},

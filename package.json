@@ -6,7 +6,7 @@
 	"scripts": {
 		"start": "node index.js",
 		"dev": "nodemon index.js",
-		"test": "npx jest --verbose --runInBand --coverage"
+		"test": "jest --verbose --runInBand --coverage"
 	},
 	"author": "Muhammad Yoga Q. E. P.",
 	"license": "ISC",

@@ -11,7 +11,7 @@ class TaskController {
 					{
 						model: User,
 						as: "assignee",
-						attributes: ["id", "username", "email"],
+						attributes: ["username", "email"],
 					},
 				],
 				order: [["createdAt", "DESC"]],
@@ -36,7 +36,7 @@ class TaskController {
 					{
 						model: User,
 						as: "assignee",
-						attributes: ["id", "username", "email"],
+						attributes: ["username", "email"],
 					},
 				],
 			});
@@ -59,6 +59,14 @@ class TaskController {
 			const { projectId } = req.params;
 			const { title, description, status, priority, dueDate, assignedTo } =
 				req.body;
+
+			const userExist = await User.findOne({ where: { id: assignedTo } });
+
+			if (!userExist) {
+				return res.status(404).json({
+					message: "User not registered",
+				});
+			}
 
 			const task = await Task.create({
 				title,

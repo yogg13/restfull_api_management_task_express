@@ -5,6 +5,7 @@ module.exports = {
 	async up(queryInterface, Sequelize) {
 		await queryInterface.bulkInsert("Tasks", [
 			{
+				id: 1,
 				title: "Design Homepage Mockup",
 				description: "Create wireframe and mockup for the new homepage",
 				status: "in_progress",
@@ -16,6 +17,7 @@ module.exports = {
 				updatedAt: new Date(),
 			},
 			{
+				id: 2,
 				title: "Setup CI/CD Pipeline",
 				description: "Configure continuous integration and deployment",
 				status: "todo",
@@ -27,6 +29,7 @@ module.exports = {
 				updatedAt: new Date(),
 			},
 			{
+				id: 3,
 				title: "Develop Login Screen",
 				description: "Implement login screen for mobile app",
 				status: "todo",
@@ -38,6 +41,7 @@ module.exports = {
 				updatedAt: new Date(),
 			},
 			{
+				id: 4,
 				title: "Write API Documentation",
 				description: "Document all API endpoints using Swagger",
 				status: "done",
@@ -49,6 +53,7 @@ module.exports = {
 				updatedAt: new Date(),
 			},
 			{
+				id: 5,
 				title: "Payment Gateway Integration",
 				description: "Integrate Stripe payment gateway",
 				status: "todo",

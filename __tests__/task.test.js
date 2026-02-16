@@ -5,12 +5,13 @@ const { hashPassword } = require("../helpers/bcrypt");
 const { generateToken } = require("../helpers/jwt");
 
 let access_token;
+let other_access_token;
+let userId;
 let projectId;
 let taskId;
 
 beforeAll(async () => {
 	await sequelize.sync({ force: true });
-
 	// Create a test user
 	const user = await User.create({
 		username: "taskuser",
@@ -19,6 +20,19 @@ beforeAll(async () => {
 	});
 
 	access_token = generateToken({ id: user.id, email: user.email });
+	userId = user.id;
+
+	// Create a second user for Forbidden tests
+	const otherUser = await User.create({
+		username: "othertaskuser",
+		email: "othertask@example.com",
+		password: hashPassword("password123"),
+	});
+
+	other_access_token = generateToken({
+		id: otherUser.id,
+		email: otherUser.email,
+	});
 
 	// Create a test project
 	const project = await Project.create({
@@ -44,6 +58,7 @@ describe("POST /projects/:projectId/tasks", () => {
 				description: "A test task description",
 				priority: "high",
 				dueDate: "2026-03-01",
+				assignedTo: userId,
 			});
 
 		expect(response.status).toBe(201);
@@ -76,6 +91,7 @@ describe("POST /projects/:projectId/tasks", () => {
 			.set("Authorization", `Bearer ${access_token}`)
 			.send({
 				description: "Missing title",
+				assignedTo: userId,
 			});
 
 		expect(response.status).toBe(400);
@@ -124,6 +140,97 @@ describe("GET /projects/:projectId/tasks/:id", () => {
 	test("should return 404 for non-existent task", async () => {
 		const response = await request(app)
 			.get(`/api/projects/${projectId}/tasks/9999`)
+			.set("Authorization", `Bearer ${access_token}`);
+
+		expect(response.status).toBe(404);
+		expect(response.body).toHaveProperty("message", "Task not found");
+	});
+});
+
+describe("PUT /projects/:projectId/tasks/:id", () => {
+	test("should update a task successfully", async () => {
+		const response = await request(app)
+			.put(`/api/projects/${projectId}/tasks/${taskId}`)
+			.set("Authorization", `Bearer ${access_token}`)
+			.send({
+				title: "Updated Task Title",
+				description: "Updated task description",
+				status: "in_progress",
+				priority: "low",
+			});
+
+		expect(response.status).toBe(200);
+		expect(response.body).toHaveProperty(
+			"message",
+			"Task updated successfully",
+		);
+		expect(response.body.data).toHaveProperty("title", "Updated Task Title");
+		expect(response.body.data).toHaveProperty("status", "in_progress");
+		expect(response.body.data).toHaveProperty("priority", "low");
+	});
+
+	test("should return 404 for non-existent task", async () => {
+		const response = await request(app)
+			.put(`/api/projects/${projectId}/tasks/9999`)
+			.set("Authorization", `Bearer ${access_token}`)
+			.send({ title: "Ghost Task" });
+
+		expect(response.status).toBe(404);
+		expect(response.body).toHaveProperty("message", "Task not found");
+	});
+
+	test("should return 403 when updating task in another user's project", async () => {
+		const response = await request(app)
+			.put(`/api/projects/${projectId}/tasks/${taskId}`)
+			.set("Authorization", `Bearer ${other_access_token}`)
+			.send({ title: "Hijacked Task" });
+
+		expect(response.status).toBe(403);
+		expect(response.body).toHaveProperty(
+			"message",
+			"You are not authorized to access this project",
+		);
+	});
+
+	test("should return 404 when project does not exist", async () => {
+		const response = await request(app)
+			.put(`/api/projects/9999/tasks/${taskId}`)
+			.set("Authorization", `Bearer ${access_token}`)
+			.send({ title: "Orphan Task" });
+
+		expect(response.status).toBe(404);
+		expect(response.body).toHaveProperty("message", "Project not found");
+	});
+});
+
+describe("DELETE /projects/:projectId/tasks/:id", () => {
+	test("should return 403 when deleting task in another user's project", async () => {
+		const response = await request(app)
+			.delete(`/api/projects/${projectId}/tasks/${taskId}`)
+			.set("Authorization", `Bearer ${other_access_token}`);
+
+		expect(response.status).toBe(403);
+		expect(response.body).toHaveProperty(
+			"message",
+			"You are not authorized to access this project",
+		);
+	});
+
+	test("should delete a task successfully", async () => {
+		const response = await request(app)
+			.delete(`/api/projects/${projectId}/tasks/${taskId}`)
+			.set("Authorization", `Bearer ${access_token}`);
+
+		expect(response.status).toBe(200);
+		expect(response.body).toHaveProperty(
+			"message",
+			"Task deleted successfully",
+		);
+	});
+
+	test("should return 404 for already deleted task", async () => {
+		const response = await request(app)
+			.delete(`/api/projects/${projectId}/tasks/${taskId}`)
 			.set("Authorization", `Bearer ${access_token}`);
 
 		expect(response.status).toBe(404);
